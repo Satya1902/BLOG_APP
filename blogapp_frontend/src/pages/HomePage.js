@@ -1,12 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
-
 import CustomButton from "../components/common/CustomButton";
 
-const HomePage = ()=>{
-    return(
+const HomePage = () => {
+    return (
     <div className="w-[100vw] h-[100vh] bg-gray-900">
-        
         <div className="w-[80%] h-[90%] flex flex-col items-center justify-center gap-8 mx-auto mt-8 shadow-2xl">
             <h1 className="text-yellow-400 text-4xl font-bold">BLOG APP</h1>
             <div className="text-gray-100 flex flex-col gap-2">
@@ -21,13 +19,8 @@ const HomePage = ()=>{
                   </div>
                </NavLink>  
             </div>
-
-            <div className="mt-8">
-
-            </div>
-            
+            <div className="mt-8"></div>
         </div>
-
     </div>
     );
 }
