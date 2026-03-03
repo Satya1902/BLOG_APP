@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "backend": "cd blogapp-backend && npm run dev",
-    "frontend": "cd blogapp-frontend && npm run dev",
+    "backend": "cd blogapp_backend && npm run dev",
+    "frontend": "cd blogapp_frontend && npm run dev",
     "dev": "concurrently -n \"frontend,backend\" -c \"bgBlue,bgYellow\" \"npm run frontend\" \"npm run backend\""
   },
   "keywords": [],
