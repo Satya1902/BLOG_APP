@@ -1,21 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
-// import { act } from "react";
+import { safeParseJSON } from "../utils/helper";
 
 const initialState = {
-  allPosts: localStorage.getItem("allpost")
-    ? JSON.parse(localStorage.getItem("allpost"))
-    : null,
-  personalPosts: localStorage.getItem("personalposts")
-    ? JSON.parse(localStorage.getItem("personalposts"))
-    : null,
-  singlePost: localStorage.getItem("singlepost")
-    ? JSON.parse(localStorage.getItem("singlepost"))
-    : null,
+  allPosts: safeParseJSON(localStorage.getItem("allpost")),
+  personalPosts: safeParseJSON(localStorage.getItem("personalposts")),
+  singlePost: safeParseJSON(localStorage.getItem("singlepost")),
 };
 
 const postSlice = createSlice({
   name: "post",
-  initialState: initialState,
+  initialState,
   reducers: {
     setAllPosts: (state, action) => {
       state.allPosts = action.payload;
@@ -25,7 +19,7 @@ const postSlice = createSlice({
       state.personalPosts = action.payload;
       localStorage.setItem(
         "personalposts",
-        JSON.stringify(state.personalPosts)
+        JSON.stringify(state.personalPosts),
       );
     },
     setSinglePost: (state, action) => {
@@ -38,7 +32,7 @@ const postSlice = createSlice({
       state.singlePost = null;
       localStorage.removeItem("personalposts");
       localStorage.removeItem("allpost");
-      localStorage.removeItem("post");
+      localStorage.removeItem("singlepost");
     },
   },
 });

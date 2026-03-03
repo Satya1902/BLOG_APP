@@ -45,12 +45,23 @@ class Like(Base):
 # ----------------------------
 # Comment Model
 # ----------------------------
+# class Comment(Base):
+#     __tablename__ = "comments"
+#     id = Column(Integer, primary_key=True, index=True)
+#     body = Column(Text)
+#     user_id = Column(Integer, ForeignKey("users.id"))
+#     post_id = Column(Integer, ForeignKey("posts.id"))
+#     post = relationship("Post", back_populates="comments")
+
 class Comment(Base):
     __tablename__ = "comments"
     id = Column(Integer, primary_key=True, index=True)
     body = Column(Text)
     user_id = Column(Integer, ForeignKey("users.id"))
     post_id = Column(Integer, ForeignKey("posts.id"))
+
+    # Crucial: Add this so we can fetch user details with the comment
+    user = relationship("User") 
     post = relationship("Post", back_populates="comments")
 
 # ----------------------------

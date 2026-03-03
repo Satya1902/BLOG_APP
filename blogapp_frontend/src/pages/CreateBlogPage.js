@@ -2,9 +2,9 @@ import { useState } from "react";
 import CustomButton from "../components/common/CustomButton";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-
 import SignupImage from "../assests/images/SignupImage.jpg";
 import { apiConnector } from "../services/apiconnector";
+import { safeParseJSON } from "../utils/helper";
 
 const CreateBlogPage = () => {
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,9 @@ const CreateBlogPage = () => {
       return;
     }
 
-    const user = JSON.parse(localStorage.getItem("user"))?._id;
+    const userObj = safeParseJSON(localStorage.getItem("user"));
+    const user = userObj?._id;
+
     if (!user) {
       toast.error("User not logged in");
       navigate("/login");
@@ -51,7 +53,6 @@ const CreateBlogPage = () => {
 
       setLoading(false);
 
-      // Safely check response
       if (response?.data?.success) {
         toast.success(response.data.message || "Blog created successfully!");
         navigate("/dashboard/my-profile");

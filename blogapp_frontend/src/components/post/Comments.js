@@ -1,135 +1,129 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
+import { safeParseJSON } from "../../utils/helper";
 
 export function Comments() {
-  // fetching id from params
-  const [postid, setPostid] = useState(useParams().postid);
-  const [comments, setComments] = useState();
-  const [loading, setLoading] = useState();
+  const { postid } = useParams();
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ body: "" });
 
-  const [formData, setFormData] = useState({
-    body: "",
-  });
-
-  async function fetchPost() {
-    const params = { id: postid, name: "postid" };
-    await axios
-      .get(`http://localhost:4000/api/v1/comments`, { params })
-      .then((response) => {
-        setComments(response.data.comments);
-        return response;
-      })
-      .catch((error) => {
-        setComments(error.response.data.comments);
-        return error.response;
-      });
-  }
-
-  function changeHandler(event) {
-    setFormData((prev) => {
-      return { ...prev, [event.target.name]: event.target.value };
-    });
-  }
-
-  async function onSubmitHandler(event) {
-    event.preventDefault();
-
-    let body = formData.body;
-    const localUser = JSON.parse(localStorage.getItem("user"));
-    const user = localUser?._id;
-    const post = postid;
-    const commentResponse = await axios
-      .post(`http://localhost:4000/api/v1/createcomment`, {
-        post,
-        body,
-        user,
-      })
-      .then((response) => {
-        return response;
-      })
-      .catch((error) => {
-        return error.response;
-      });
-
-    console.log("Printing response while commenting", commentResponse);
-
-    if (commentResponse?.data?.success) {
-      toast.success(commentResponse.data.message);
-    } else {
-      toast.error("Something went wrong while comment Please try again");
-    }
-  }
-
-  useEffect(() => {
+  const fetchComments = useCallback(async () => {
     setLoading(true);
     try {
-      fetchPost();
+      const response = await axios.get(
+        `http://localhost:4000/api/v1/comments`,
+        { params: { id: postid } },
+      );
+      setComments(response.data.comments || []);
     } catch (error) {
-      console.error("error", error);
-      toast.error("Something went wrong while fetching post");
+      console.error("Fetch Error:", error);
+      toast.error("Could not load comments");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  }, [postid]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
+  const changeHandler = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+
+    if (!formData.body.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+
+    const userObj = safeParseJSON(localStorage.getItem("user"));
+    const userId = userObj?._id || userObj?.id;
+
+    if (!userId) {
+      toast.error("Please log in to comment");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `http://localhost:4000/api/v1/createcomment`,
+        {
+          post: parseInt(postid),
+          body: formData.body,
+          user: parseInt(userId),
+        },
+      );
+
+      if (response.data.success) {
+        toast.success("Comment added!");
+        setFormData({ body: "" });
+        fetchComments();
+      }
+    } catch (error) {
+      console.error("Post Error:", error);
+      toast.error(error.response?.data?.detail || "Failed to post comment");
+    }
+  };
 
   return (
-    <div className=" bg-gray-900">
-      <div className="w-[90%] flex flex-col mx-auto bg-gray-900">
-        <div className="w-[80%] h-[80%] flex flex-col justify-between gap-2 mx-auto py-2 px-2 bg-gray-800">
-          <div className="w-full flex flex-col gap-5 p-4">
-            <div className="w-fit mx-auto text-green-400 font-bold text-2xl border-b-[2px] border-green-400">
-              List of all Comments
+    <div className="bg-gray-900 min-h-screen p-4">
+      <div className="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+        <div className="p-6">
+          <h2 className="text-2xl font-bold text-green-400 border-b-2 border-green-400 w-fit mb-6">
+            Discussions
+          </h2>
+
+          {loading ? (
+            <div className="text-white text-center py-10 animate-pulse">
+              Loading...
             </div>
-            {loading ? (
-              <div className="w-full text-white text-3xl font-bold">
-                Loading
-              </div>
-            ) : (
-              <div className="w-full flex flex-col gap-2 text-white justify-between items-center">
-                {comments?.length ? (
-                  <div className="w-full flex flex-col justify-center gap-1">
-                    {comments.map((comment, index) => (
-                      <div className="w-full flex text-green-400" key={index}>
-                        <div className="w-full flex justify-start flex-wrap">
-                          <div className="text-md text-white text-bold p-2">
-                            {comment?.body}
-                          </div>
-                          <div className="w-1"></div>
-                          <div className="flex justify-end gap-2 text-md text-blue-400 text-bold p-2">
-                            <div className="">{`- ${comment.user.firstname}`}</div>
-                            <div>{comment.user.lastname}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+          ) : (
+            <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto pr-2">
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="bg-gray-700 p-4 rounded-lg border-l-4 border-blue-500"
+                  >
+                    <p className="text-gray-100 mb-2">{comment.body}</p>
+                    <p className="text-right text-sm text-blue-300 font-semibold">
+                      — {comment.user?.firstname} {comment.user?.lastname}
+                    </p>
                   </div>
-                ) : (
-                  <div className="text-red font-bold text-3xl">
-                    No one commented on this post
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="w-full mt-4 h-12 mx-auto flex p-2">
-            <form
-              className="w-full flex justify-between gap-2"
-              onSubmit={onSubmitHandler}
+                ))
+              ) : (
+                <p className="text-gray-400 text-center py-10">
+                  No comments yet.
+                </p>
+              )}
+            </div>
+          )}
+
+          <form
+            onSubmit={onSubmitHandler}
+            className="flex gap-2 border-t border-gray-600 pt-6"
+          >
+            <input
+              type="text"
+              name="body"
+              value={formData.body}
+              onChange={changeHandler}
+              placeholder="Add a comment..."
+              className="flex-1 bg-gray-100 rounded-md px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+            <button
+              type="submit"
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-md transition-colors"
             >
-              <input
-                type="text"
-                name="body"
-                value={formData.body}
-                onChange={changeHandler}
-                className="w-[80%] rounded-md p-1 text-black"
-                placeholder="enter your comment here"
-              />
-              <button className="text-black bg-yellow-200 px-2 py-1 text-sm font-bold rounded-full hover:bg-yellow-400">
-                Add Comment
-              </button>
-            </form>
-          </div>
+              Post
+            </button>
+          </form>
         </div>
       </div>
     </div>
