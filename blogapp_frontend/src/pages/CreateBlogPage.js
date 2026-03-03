@@ -15,58 +15,79 @@ const CreateBlogPage = () => {
     body: "",
   });
 
-  function changeHandler(event) {
-    setFormData((prev) => {
-      return { ...prev, [event.target.name]: event.target.value };
-    });
-  }
+  const changeHandler = (event) => {
+    setFormData((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
+  };
 
-  async function onSubmitHandler(event) {
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    const heading = formData.heading;
-    const body = formData.body;
-    const user = JSON.parse(localStorage.getItem("user"))._id;
-    let response;
-    setLoading(true);
-    response = await apiConnector(
-      "POST",
-      `http://localhost:4000/api/v1/createpost`,
-      { heading, body, user }
-    );
-    setLoading(false);
-    console.log(" response from createpost controller ", response);
-    if (response.data.success) {
-      toast.success(response.data.message);
-      navigate("/dashboard/my-profile");
-    } else {
-      toast.error(response.data.message);
-      navigate("/createblog");
+    const heading = formData.heading.trim();
+    const body = formData.body.trim();
+
+    if (!heading || !body) {
+      toast.error("Please fill in all fields");
+      return;
     }
-  }
+
+    const user = JSON.parse(localStorage.getItem("user"))?._id;
+    if (!user) {
+      toast.error("User not logged in");
+      navigate("/login");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await apiConnector(
+        "POST",
+        "http://localhost:4000/api/v1/createpost",
+        { heading, body, user },
+      );
+
+      setLoading(false);
+
+      // Safely check response
+      if (response?.data?.success) {
+        toast.success(response.data.message || "Blog created successfully!");
+        navigate("/dashboard/my-profile");
+      } else {
+        toast.error(
+          response?.data?.message ||
+            `Error ${response?.status || ""}: Failed to create blog`,
+        );
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Error creating post:", error);
+      toast.error(error?.message || "Server or network error");
+    }
+  };
 
   return (
     <div className="w-[100vw] h-fit bg-gray-900">
       {loading ? (
-        "loading"
+        <div className="text-white text-center py-10 text-xl">Loading...</div>
       ) : (
-        <div className="w-[92%] h-fit bg-gray-900 flex justify-center gap-6 mx-auto mt-2 mb-2">
-          <div className="w-[50%] h-fit-content flex flex-col gap-2 mt-10 text-white p-4 mb-2">
+        <div className="w-[92%] h-fit flex justify-center gap-6 mx-auto mt-2 mb-2">
+          <div className="w-[50%] flex flex-col gap-2 mt-10 text-white p-4 mb-2">
             <h1 className="text-blue-200 text-4xl font-bold mx-auto">
-              {" "}
-              create and view the beautiful blogs{" "}
+              Create and view beautiful blogs
             </h1>
             <form
               onSubmit={onSubmitHandler}
               className="text-blue-50 flex flex-col gap-2 p-2"
             >
-              {/* <label className="mt-16"> Enter your email to varify</label> */}
               <input
                 type="text"
                 name="heading"
                 value={formData.heading}
                 onChange={changeHandler}
-                placeholder="Enter heading of your blog here "
+                placeholder="Enter heading of your blog here"
                 className="text-black p-2 mt-2 rounded-md"
               />
               <input
@@ -74,16 +95,16 @@ const CreateBlogPage = () => {
                 name="body"
                 value={formData.body}
                 onChange={changeHandler}
-                placeholder="Enter your post here "
+                placeholder="Enter your post here"
                 className="text-black p-2 mt-2 rounded-md"
               />
-              <button className="mt-16">
-                <CustomButton title={"Signup"} bg_color={"bg-yellow-400"} />
+              <button type="submit" className="mt-4">
+                <CustomButton title={"CreateBlog"} bg_color={"bg-yellow-400"} />
               </button>
             </form>
           </div>
           <div className="w-[45%] mt-16">
-            <img src={SignupImage} alt="SignupImage" width={600} h={500} />
+            <img src={SignupImage} alt="SignupImage" width={600} height={500} />
           </div>
         </div>
       )}

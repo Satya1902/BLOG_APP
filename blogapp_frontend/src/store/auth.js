@@ -1,42 +1,57 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { jwtDecode } from "jwt-decode";
+
+// Safely decode JWT
+const getUserFromToken = (token) => {
+  if (!token) return null;
+  try {
+    return jwtDecode(token);
+  } catch (error) {
+    console.error("Invalid token:", error);
+    localStorage.removeItem("user");
+    return null;
+  }
+};
+
+const tokenFromStorage = localStorage.getItem("token");
+const userToken = localStorage.getItem("user");
 
 const initialState = {
-  token: localStorage.getItem("token") && localStorage.getItem("token") !== "undefined" 
-         ? JSON.parse(localStorage.getItem("token")) 
-         : null,
-  user: localStorage.getItem("user") && localStorage.getItem("user") !== "undefined" 
-         ? JSON.parse(localStorage.getItem("user")) 
-         : null,
+  token:
+    tokenFromStorage && tokenFromStorage !== "undefined"
+      ? tokenFromStorage
+      : null,
+  user:
+    userToken && userToken !== "undefined" ? getUserFromToken(userToken) : null,
   loading: false,
   email: null,
-  otp: null, // Added missing otp state
+  otp: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: initialState,
+  initialState,
   reducers: {
-    setToken(state, value) {
-      state.token = value.payload;
+    setToken(state, action) {
+      state.token = action.payload;
+      localStorage.setItem("token", action.payload);
     },
-    setUser(state, value) {
-      state.user = value.payload;
+    setUser(state, action) {
+      state.user = action.payload;
+      localStorage.setItem("user", action.payload?._id || "");
     },
-    setLoading(state, value) {
-      state.loading = value.payload;
+    setLoading(state, action) {
+      state.loading = action.payload;
     },
-    setEmail(state, value) {
-      state.email = value.payload;
+    setEmail(state, action) {
+      state.email = action.payload;
     },
-    // New action to fix SignupPage and VarifyEmailPage errors
-    setOtp(state, value) {
-      state.otp = value.payload;
+    setOtp(state, action) {
+      state.otp = action.payload;
     },
-    // New action to fix VarifyEmailPage error
     removeOtp(state) {
       state.otp = null;
     },
-    // New action to fix SignupProfilePage error
     removeEmail(state) {
       state.email = null;
     },
@@ -45,19 +60,21 @@ const authSlice = createSlice({
       state.user = null;
       state.email = null;
       state.otp = null;
-    }
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    },
   },
 });
 
-export const { 
-  setToken, 
-  setUser, 
-  setLoading, 
-  setEmail, 
-  setOtp, 
-  removeOtp, 
-  removeEmail, 
-  resetAuth 
+export const {
+  setToken,
+  setUser,
+  setLoading,
+  setEmail,
+  setOtp,
+  removeOtp,
+  removeEmail,
+  resetAuth,
 } = authSlice.actions;
 
 export default authSlice.reducer;
