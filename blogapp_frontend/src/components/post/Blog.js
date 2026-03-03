@@ -1,20 +1,25 @@
 import { FcLike, FcLikePlaceholder } from "react-icons/fc";
+import { FcLike, FcLikePlaceholder } from "react-icons/fc";
 import { NavLink, useNavigate } from "react-router-dom";
 import { FaRegCommentDots } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setSinglePost } from "../../store/post";
 
 export default function Blog({ post }) {
   const [liked, setLiked] = useState(false);
+  const [shortPost, setShortPost] = useState("");
   const [shortPost, setShortPost] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   useEffect(() => {
     isUserLikedThisPost();
+    if (post?.body) setShortPost(post.body.slice(0, 25));
+    // eslint-disable-next-line
     if (post?.body) setShortPost(post.body.slice(0, 25));
     // eslint-disable-next-line
   }, []);
@@ -25,7 +30,7 @@ export default function Blog({ post }) {
       // Safety check: if no user is logged in, don't try to fetch like status
       if (!userRaw || userRaw === "undefined") return; 
 
-      const response = await axios.get(`http://localhost:4000/api/v1/isuserlikedthispost`, {
+      const response = await axios.get(`http://127.0.0.1:4000/api/v1/isuserlikedthispost`, {
         params: {
           userid: JSON.parse(userRaw)?._id,
           postid: post?._id,
@@ -41,9 +46,10 @@ export default function Blog({ post }) {
     try {
       const userRaw = localStorage.getItem("user");
       const user = userRaw ? JSON.parse(userRaw) : null;
-      const res = await axios.post(`http://localhost:4000/api/v1/dislike`, { post, user });
+      const res = await axios.post(`http://127.0.0.1:4000/api/v1/dislike`, { post, user });
       if (res?.data?.success) setLiked(false);
     } catch (error) {
+      toast.error("Error disliking");
       toast.error("Error disliking");
     }
   }
@@ -54,7 +60,12 @@ export default function Blog({ post }) {
       const user = userRaw ? JSON.parse(userRaw) : null;
       const res = await axios.post(`http://localhost:4000/api/v1/createlike`, { post, user });
       if (res?.data?.success) setLiked(true);
+      const userRaw = localStorage.getItem("user");
+      const user = userRaw ? JSON.parse(userRaw) : null;
+      const res = await axios.post(`http://localhost:4000/api/v1/createlike`, { post, user });
+      if (res?.data?.success) setLiked(true);
     } catch (error) {
+      toast.error("Error liking");
       toast.error("Error liking");
     }
   }
@@ -68,6 +79,7 @@ export default function Blog({ post }) {
       disLikePost();
       toast.error("You have disliked this post");
     }
+    setTimeout(() => { window.location.reload(); }, 1000);
     setTimeout(() => { window.location.reload(); }, 1000);
   }
 
@@ -83,9 +95,12 @@ export default function Blog({ post }) {
       <div className="flex flex-col">
         <button className="flex flex-col justify-center items-center gap-2 p-2" onClick={clickPostHandler}>
           <div className="text-green-400 text-2xl mx-auto font-bold">{post.heading}</div>
+        <button className="flex flex-col justify-center items-center gap-2 p-2" onClick={clickPostHandler}>
+          <div className="text-green-400 text-2xl mx-auto font-bold">{post.heading}</div>
           <div className="w-full flex flex-row">
             <div className="text-white mx-auto flex gap-1">
               <div className="opacity-50">
+                {shortPost}{post.body.length > 25 ? " ...more" : "."}
                 {shortPost}{post.body.length > 25 ? " ...more" : "."}
               </div>
             </div>
@@ -97,7 +112,9 @@ export default function Blog({ post }) {
               {liked ? <FcLike size={22} /> : <FcLikePlaceholder size={22} />}
             </button>
             <NavLink to={`/likes/${post?._id}`} className="text-md">{post.likes.length}</NavLink>
+            <NavLink to={`/likes/${post?._id}`} className="text-md">{post.likes.length}</NavLink>
           </div>
+          <NavLink to={`/comments/${post?._id}`} className="flex gap-2 relative text-green-200">
           <NavLink to={`/comments/${post?._id}`} className="flex gap-2 relative text-green-200">
             <FaRegCommentDots size={24} />
             <div>{post.comments.length}</div>
