@@ -1,68 +1,63 @@
 import { createSlice } from "@reduxjs/toolkit";
-// import { act } from "react";
 
 const initialState = {
-  user: localStorage.getItem("user")
-    ? JSON.parse(localStorage.getItem("user"))
-    : null,
-  email: localStorage.getItem("email")
-    ? JSON.parse(localStorage.getItem("email"))
-    : null,
-  otp: localStorage.getItem("otp")
-    ? JSON.parse(localStorage.getItem("otp"))
-    : null,
-  token: localStorage.getItem("token"),
+  token: localStorage.getItem("token") && localStorage.getItem("token") !== "undefined" 
+         ? JSON.parse(localStorage.getItem("token")) 
+         : null,
+  user: localStorage.getItem("user") && localStorage.getItem("user") !== "undefined" 
+         ? JSON.parse(localStorage.getItem("user")) 
+         : null,
+  loading: false,
+  email: null,
+  otp: null, // Added missing otp state
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState: initialState,
   reducers: {
-    setUser: (state, action) => {
-      state.user = action.payload;
-      localStorage.setItem("user", JSON.stringify(state.user));
+    setToken(state, value) {
+      state.token = value.payload;
     },
-    setEmail: (state, action) => {
-      state.email = action.payload;
-      localStorage.setItem("email", JSON.stringify(state.email));
+    setUser(state, value) {
+      state.user = value.payload;
     },
-    setOtp: (state, action) => {
-      state.otp = action.payload;
-      localStorage.setItem("otp", JSON.stringify(state.otp));
+    setLoading(state, value) {
+      state.loading = value.payload;
     },
-    removeOtp: (state, action) => {
-      state.otp = action.payload;
-      localStorage.removeItem("otp");
+    setEmail(state, value) {
+      state.email = value.payload;
     },
-    removeEmail: (state, action) => {
-      state.email = action.payload;
-      localStorage.removeItem("email");
+    // New action to fix SignupPage and VarifyEmailPage errors
+    setOtp(state, value) {
+      state.otp = value.payload;
     },
-    setToken: (state, action) => {
-      state.token = action.payload;
-      localStorage.setItem("token", state.token);
+    // New action to fix VarifyEmailPage error
+    removeOtp(state) {
+      state.otp = null;
     },
-    removeToken: (state, action) => {
-      localStorage.removeItem("token");
+    // New action to fix SignupProfilePage error
+    removeEmail(state) {
+      state.email = null;
     },
-    resetAuth: () => {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      localStorage.removeItem("email");
-      localStorage.removeItem("otp");
-    },
+    resetAuth(state) {
+      state.token = null;
+      state.user = null;
+      state.email = null;
+      state.otp = null;
+    }
   },
 });
 
-export const {
-  setUser,
-  setOtp,
-  setEmail,
-  removeEmail,
-  removeOtp,
-  setToken,
-  removeToken,
-  resetAuth,
+export const { 
+  setToken, 
+  setUser, 
+  setLoading, 
+  setEmail, 
+  setOtp, 
+  removeOtp, 
+  removeEmail, 
+  resetAuth 
 } = authSlice.actions;
 
 export default authSlice.reducer;
