@@ -18,7 +18,7 @@ export function SinglePost() {
   }, []);
 
   const userObj = safeParseJSON(localStorage.getItem("user"));
-  const userId = userObj?._id;
+  const userId = userObj?.id;
 
   const matchUser = (uid) => uid === userId;
 

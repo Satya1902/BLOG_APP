@@ -41,6 +41,7 @@ class Like(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     post_id = Column(Integer, ForeignKey("posts.id"))
     post = relationship("Post", back_populates="likes")
+    user = relationship("User")
 
 # ----------------------------
 # Comment Model

@@ -14,29 +14,33 @@ export default function Blog({ post }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const getTokenUser = () => {
-    const token = localStorage.getItem("user");
+  // ✅ Get userId safely from JWT token
+  const getTokenUserId = () => {
+    const token = localStorage.getItem("token"); // <-- your JWT
     if (!token) return null;
     try {
-      return jwtDecode(token);
-    } catch {
+      const decoded = jwtDecode(token);
+      return decoded?.id || decoded?._id;
+    } catch (err) {
+      console.error("Invalid token", err);
       return null;
     }
   };
 
+  // ✅ Check if user already liked this post
   const checkLikeStatus = useCallback(async () => {
-    const user = getTokenUser();
-    if (!user?._id) return;
+    const userId = getTokenUserId();
+    if (!userId || !post?.id) return;
     try {
       const res = await axios.get(
         "http://127.0.0.1:4000/api/v1/isuserlikedthispost",
         {
-          params: { userid: user._id, postid: post._id },
+          params: { userid: userId, postid: post.id }, // ✅ backend uses "id"
         },
       );
       setLiked(res.data.liked);
-    } catch {
-      console.error("Error fetching like status");
+    } catch (err) {
+      console.error("Error fetching like status", err);
     }
   }, [post]);
 
@@ -45,36 +49,52 @@ export default function Blog({ post }) {
     setShortPost(post?.body?.slice(0, 50) || "");
   }, [post, checkLikeStatus]);
 
+  // ✅ Handle like / dislike toggle
   const likeClickHandler = async (e) => {
     e.stopPropagation();
-    const user = getTokenUser();
-    console.log("user : ", user);
-    if (!user) return;
+    const userId = getTokenUserId();
+    if (!userId) {
+      toast.error("Please login to like a post");
+      return;
+    }
 
     try {
       if (!liked) {
-        await axios.post("http://127.0.0.1:4000/api/v1/createlike", {
-          post: post._id,
-          user: user._id,
-        });
-        setLiked(true);
+        // Like
+        const res = await axios.post(
+          "http://127.0.0.1:4000/api/v1/createlike",
+          {
+            post: post.id,
+            user: userId,
+          },
+        );
+        if (res.data.success) {
+          setLiked(true);
+          toast.success("You liked this post");
+        }
       } else {
-        await axios.post("http://127.0.0.1:4000/api/v1/dislike", {
-          post: post._id,
-          user: user._id,
+        // Unlike
+        const res = await axios.post("http://127.0.0.1:4000/api/v1/dislike", {
+          post: post.id,
+          user: userId,
         });
-        setLiked(false);
+        if (res.data.success) {
+          setLiked(false);
+          toast.error("You unliked this post");
+        }
       }
-    } catch {
-      toast.error("Error updating like");
+    } catch (err) {
+      console.error("Error updating like", err);
+      toast.error("Failed to update like");
     }
   };
 
+  // ✅ Navigate to single post
   const clickPostHandler = (e) => {
     e.preventDefault();
     e.stopPropagation();
     dispatch(setSinglePost(post));
-    navigate(`/post/${post._id}`);
+    navigate(`/post/${post.id}`);
   };
 
   return (
@@ -92,8 +112,8 @@ export default function Blog({ post }) {
             <button onClick={likeClickHandler}>
               {liked ? <FcLike size={22} /> : <FcLikePlaceholder size={22} />}
             </button>
-            <NavLink to={`/likes/${post._id}`}>
-              {post?.likes?.length || 0}
+            <NavLink to={`/likes/${post.id}`}>
+              {post?.likes?.length ?? 0}
             </NavLink>
           </div>
 
@@ -102,7 +122,7 @@ export default function Blog({ post }) {
             className="flex gap-2 text-green-200 items-center"
           >
             <FaRegCommentDots size={22} />
-            <div>{post?.comments?.length || 0}</div>
+            <div>{post?.comments?.length ?? 0}</div>
           </NavLink>
         </div>
       </div>

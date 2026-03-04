@@ -53,7 +53,7 @@ export function Comments() {
     }
 
     const userObj = safeParseJSON(localStorage.getItem("user"));
-    const userId = parseInt(userObj?._id || userObj?.id);
+    const userId = parseInt(userObj?.id || userObj?.id);
     if (!userId) {
       toast.error("Please log in to comment");
       return;

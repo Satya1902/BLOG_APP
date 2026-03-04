@@ -6,8 +6,8 @@ def get_all_posts(db: Session):
         db.query(models.Post)
         .options(
             joinedload(models.Post.author),
-            joinedload(models.Post.likes),
-            joinedload(models.Post.comments)
+            joinedload(models.Post.likes).joinedload(models.Like.user),     
+            joinedload(models.Post.comments).joinedload(models.Comment.user)
         )
         .all()
     )
@@ -19,8 +19,8 @@ def get_user_posts(db: Session, user_id: int):
         .filter(models.Post.user_id == user_id)
         .options(
             joinedload(models.Post.author),
-            joinedload(models.Post.likes),
-            joinedload(models.Post.comments)
+            joinedload(models.Post.likes).joinedload(models.Like.user),    
+            joinedload(models.Post.comments).joinedload(models.Comment.user)
         )
         .all()
     )
