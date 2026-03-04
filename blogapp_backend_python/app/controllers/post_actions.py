@@ -4,6 +4,10 @@ from .. import models
 def get_all_posts(db: Session):
     return db.query(models.Post).all()
 
+def get_user_posts(db: Session, user_id: int):
+    """Fetch all posts created by a specific user"""
+    return db.query(models.Post).filter(models.Post.user_id == user_id).all()
+
 def create_post(db: Session, heading: str, body: str, user_id: int):
     new_post = models.Post(heading=heading, body=body, user_id=user_id)
     db.add(new_post)

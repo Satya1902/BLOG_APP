@@ -2,7 +2,14 @@ import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
-import { safeParseJSON } from "../../utils/helper";
+
+const safeParseJSON = (str) => {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
+};
 
 export function Comments() {
   const { postid } = useParams();
@@ -10,21 +17,25 @@ export function Comments() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ body: "" });
 
+  const postIdNum = parseInt(postid);
+
   const fetchComments = useCallback(async () => {
+    if (isNaN(postIdNum)) return;
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:4000/api/v1/comments`,
-        { params: { id: postid } },
+        "http://127.0.0.1:4000/api/v1/comments",
+        { params: { id: postIdNum } },
       );
       setComments(response.data.comments || []);
     } catch (error) {
       console.error("Fetch Error:", error);
-      toast.error("Could not load comments");
+      const msg = error.response?.data?.detail || "Could not load comments";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
-  }, [postid]);
+  }, [postIdNum]);
 
   useEffect(() => {
     fetchComments();
@@ -36,28 +47,37 @@ export function Comments() {
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
-
     if (!formData.body.trim()) {
       toast.error("Comment cannot be empty");
       return;
     }
 
     const userObj = safeParseJSON(localStorage.getItem("user"));
-    const userId = userObj?._id || userObj?.id;
-
+    const userId = parseInt(userObj?._id || userObj?.id);
     if (!userId) {
       toast.error("Please log in to comment");
       return;
     }
 
+    console.log(
+      "post is : ",
+      postIdNum,
+      " body ",
+      formData.body,
+      " user ",
+      userId,
+    );
+
+    if (isNaN(postIdNum)) {
+      toast.error("Invalid post ID");
+      return;
+    }
+
     try {
+      console.log("hello");
       const response = await axios.post(
-        `http://localhost:4000/api/v1/createcomment`,
-        {
-          post: parseInt(postid),
-          body: formData.body,
-          user: parseInt(userId),
-        },
+        "http://127.0.0.1:4000/api/v1/createcomment",
+        { post: postIdNum, body: formData.body, user: userId },
       );
 
       if (response.data.success) {
@@ -67,7 +87,12 @@ export function Comments() {
       }
     } catch (error) {
       console.error("Post Error:", error);
-      toast.error(error.response?.data?.detail || "Failed to post comment");
+      const msg =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        JSON.stringify(error.response?.data) ||
+        "Failed to post comment";
+      toast.error(msg);
     }
   };
 
@@ -85,10 +110,10 @@ export function Comments() {
             </div>
           ) : (
             <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto pr-2">
-              {comments?.length > 0 ? (
+              {comments.length ? (
                 comments.map((comment) => (
                   <div
-                    key={comment.id}
+                    key={comment._id || comment.id}
                     className="bg-gray-700 p-4 rounded-lg border-l-4 border-blue-500"
                   >
                     <p className="text-gray-100 mb-2">{comment.body}</p>

@@ -60,6 +60,11 @@ def get_all_posts(db: Session = Depends(get_db)):
     posts = post_actions.get_all_posts(db)
     return {"success": True, "allPosts": posts}
 
+@router.get("/getuserposts")
+def get_user_posts(userid: int, db: Session = Depends(get_db)):
+    posts = post_actions.get_user_posts(db, userid)
+    return {"success": True, "userPosts": posts}
+
 @router.post("/createpost")
 def create_post(req: CreatePostRequest, db: Session = Depends(get_db)):
     post = post_actions.create_post(db, req.heading, req.body, req.user)

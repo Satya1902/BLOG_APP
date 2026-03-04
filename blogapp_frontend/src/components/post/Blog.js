@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setSinglePost } from "../../store/post";
-import { jwtDecode } from "jwt-decode"; // fixed import
+import { jwtDecode } from "jwt-decode";
 
 export default function Blog({ post }) {
   const [liked, setLiked] = useState(false);
@@ -24,113 +24,84 @@ export default function Blog({ post }) {
     }
   };
 
-  // Check if the current user has liked this post
-  const isUserLikedThisPost = useCallback(async () => {
+  const checkLikeStatus = useCallback(async () => {
+    const user = getTokenUser();
+    if (!user?._id) return;
     try {
-      const user = getTokenUser();
-      if (!user?._id) return;
-
-      const response = await axios.get(
-        `http://127.0.0.1:4000/api/v1/isuserlikedthispost`,
+      const res = await axios.get(
+        "http://127.0.0.1:4000/api/v1/isuserlikedthispost",
         {
-          params: {
-            userid: user._id,
-            postid: post?._id,
-          },
+          params: { userid: user._id, postid: post._id },
         },
       );
-      setLiked(response?.data?.liked);
-    } catch (error) {
-      console.error("Error checking like status:", error);
+      setLiked(res.data.liked);
+    } catch {
+      console.error("Error fetching like status");
     }
   }, [post]);
 
   useEffect(() => {
-    isUserLikedThisPost();
-    if (post?.body) setShortPost(post.body.slice(0, 25));
-  }, [post, isUserLikedThisPost]);
+    checkLikeStatus();
+    setShortPost(post?.body?.slice(0, 50) || "");
+  }, [post, checkLikeStatus]);
 
-  const disLikePost = async () => {
+  const likeClickHandler = async (e) => {
+    e.stopPropagation();
+    const user = getTokenUser();
+    if (!user) return;
+
     try {
-      const user = getTokenUser();
-      if (!user) return;
-
-      const res = await axios.post(`http://127.0.0.1:4000/api/v1/dislike`, {
-        post,
-        user,
-      });
-      if (res?.data?.success) setLiked(false);
-    } catch (error) {
-      toast.error("Error disliking");
+      if (!liked) {
+        await axios.post("http://127.0.0.1:4000/api/v1/createlike", {
+          post: post._id,
+          user: user._id,
+        });
+        setLiked(true);
+      } else {
+        await axios.post("http://127.0.0.1:4000/api/v1/dislike", {
+          post: post._id,
+          user: user._id,
+        });
+        setLiked(false);
+      }
+    } catch {
+      toast.error("Error updating like");
     }
   };
 
-  const likePost = async () => {
-    try {
-      const user = getTokenUser();
-      if (!user) return;
-
-      const res = await axios.post(`http://127.0.0.1:4000/api/v1/createlike`, {
-        post,
-        user,
-      });
-      if (res?.data?.success) setLiked(true);
-    } catch (error) {
-      toast.error("Error liking");
-    }
-  };
-
-  const likeClickHandler = (event) => {
-    event.stopPropagation();
-    if (!liked) {
-      likePost();
-      toast.success("You liked this post");
-    } else {
-      disLikePost();
-      toast.error("You have disliked this post");
-    }
-  };
-
-  const clickPostHandler = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const clickPostHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     dispatch(setSinglePost(post));
     navigate(`/post/${post._id}`);
   };
 
   return (
-    <div className="w-[30%] h-[30%] bg-gray-900 border-2 p-8 rounded-md">
+    <div className="w-[30%] h-[30%] bg-gray-900 border-2 p-6 rounded-md">
       <div className="flex flex-col">
-        <div
-          className="flex flex-col justify-center items-center gap-2 p-2 cursor-pointer"
-          onClick={clickPostHandler}
-        >
-          <div className="text-green-400 text-2xl mx-auto font-bold">
-            {post.heading}
-          </div>
-          <div className="w-full flex flex-row">
-            <div className="text-white mx-auto flex gap-1 opacity-50">
-              {shortPost}
-              {post?.body?.length > 25 ? " ...more" : "."}
-            </div>
-          </div>
+        <div className="cursor-pointer" onClick={clickPostHandler}>
+          <h3 className="text-green-400 text-2xl font-bold">{post.heading}</h3>
+          <p className="text-white opacity-50 mt-1">
+            {shortPost} {post?.body?.length > 50 ? "...more" : ""}
+          </p>
         </div>
 
-        <div className="flex justify-around mt-5">
-          <div className="flex gap-2 text-red-400">
+        <div className="flex justify-around mt-4">
+          <div className="flex items-center gap-2 text-red-400">
             <button onClick={likeClickHandler}>
               {liked ? <FcLike size={22} /> : <FcLikePlaceholder size={22} />}
             </button>
-            <NavLink to={`/likes/${post?._id}`} className="text-md">
-              {post?.likes?.length}
+            <NavLink to={`/likes/${post._id}`}>
+              {post?.likes?.length || 0}
             </NavLink>
           </div>
+
           <NavLink
-            to={`/comments/${post?._id}`}
-            className="flex gap-2 relative text-green-200"
+            to={`/comments/${post._id}`}
+            className="flex gap-2 text-green-200 items-center"
           >
-            <FaRegCommentDots size={24} />
-            <div>{post.comments?.length}</div>
+            <FaRegCommentDots size={22} />
+            <div>{post?.comments?.length || 0}</div>
           </NavLink>
         </div>
       </div>
