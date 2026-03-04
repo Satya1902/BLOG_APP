@@ -97,7 +97,7 @@ export default function Blog({ post }) {
           </div>
 
           <NavLink
-            to={`/comments/${post._id}`}
+            to={`/comments/${post.id}`}
             className="flex gap-2 text-green-200 items-center"
           >
             <FaRegCommentDots size={22} />
