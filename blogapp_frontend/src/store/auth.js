@@ -4,11 +4,13 @@ import { jwtDecode } from "jwt-decode";
 // Safely decode JWT
 const getUserFromToken = (token) => {
   if (!token) return null;
+
   try {
     return jwtDecode(token);
   } catch (error) {
     console.error("Invalid token:", error);
-    localStorage.removeItem("user");
+    localStorage.removeItem("token"); // clear invalid token
+    localStorage.removeItem("user"); // also clear user just in case
     return null;
   }
 };
@@ -39,6 +41,7 @@ const authSlice = createSlice({
     setUser(state, action) {
       state.user = action.payload;
       localStorage.setItem("user", action.payload?._id || "");
+      console.log("user has bee set to localstorage with ", action.payload);
     },
     setLoading(state, action) {
       state.loading = action.payload;

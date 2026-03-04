@@ -85,7 +85,7 @@ export function Comments() {
             </div>
           ) : (
             <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto pr-2">
-              {comments.length > 0 ? (
+              {comments?.length > 0 ? (
                 comments.map((comment) => (
                   <div
                     key={comment.id}

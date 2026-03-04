@@ -66,12 +66,14 @@ const LoginPage = () => {
       console.log(
         "setting user & token to Auth state with ",
         response.data.user,
-        response.data.token
+        response.data.token,
       );
       dispatch(setUser(response.data.user));
       dispatch(setToken(response.data.token));
       // dispatch(resetAuth());
-      // localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("token", response.data.token);
+
       navigate("/dashboard/my-profile");
     } else {
       toast.error(response.data.message);

@@ -1,93 +1,88 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-
-import logo from "../../assests/logo's/blogAppLogo.png";
 import { useDispatch, useSelector } from "react-redux";
-import { resetAuth, setToken, setUser } from "../../store/auth";
+import { resetAuth } from "../../store/auth";
 import toast from "react-hot-toast";
-// import { useEffect } from "react";
+import logo from "../../assests/logo's/blogAppLogo.png";
 
 const Navbar = () => {
   const location = useLocation();
   const dispatch = useDispatch();
-
-  const authState = useSelector((state) => state.auth);
-  const user = authState.user;
   const navigate = useNavigate();
 
-  function onClickLogoutHandler() {
-    dispatch(setToken(null));
-    dispatch(setUser(null));
-    dispatch(resetAuth());
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    toast.success("Logged Out");
-    navigate("/login");
-  }
+  const { user } = useSelector((state) => state.auth);
 
-  // const token = localStorage.getItem("token");
+  const logoutHandler = () => {
+    dispatch(resetAuth());
+    toast.success("Logged out successfully");
+    navigate("/login");
+  };
 
   return (
     <div
-      className={`flex h-14 items-center justify-center border-b-[1px] border-b-richblack-700 
-       ${location.pathname !== "/" ? "bg-richblack-800" : ""} 
-       transition-all duration-200`}
+      className={`flex h-14 items-center justify-center border-b-[1px] border-b-richblack-700 ${
+        location.pathname !== "/" ? "bg-richblack-800" : ""
+      } transition-all duration-200`}
     >
-      <div
-        className={`flex w-11/12 max-w-maxContent items-center justify-between`}
-      >
+      <div className="flex w-11/12 max-w-maxContent items-center justify-between">
         <NavLink to="/">
-          <img src={logo} alt="Logo" width={40} height={2} loading="lazy" />
+          <img src={logo} alt="Logo" width={40} height={40} loading="lazy" />
         </NavLink>
-        <div className={`flex gap-3 text-gray-400`}>
-          <button
+
+        <div className="flex gap-3 text-gray-400">
+          <NavLink
+            to="/"
             className={`rounded-md px-3 py-2 hover:text-gray-800 hover:bg-gray-400 ${
-              location.pathname === "/" ? "text-yellow-200" : " "
+              location.pathname === "/" ? "text-yellow-200" : ""
             }`}
           >
-            <NavLink to={"/"}>Homepage</NavLink>
-          </button>
-          <button
+            Homepage
+          </NavLink>
+          <NavLink
+            to="/about"
             className={`rounded-md px-3 py-2 hover:text-gray-800 hover:bg-gray-400 ${
-              location.pathname === "/about" ? "text-yellow-200" : " "
+              location.pathname === "/about" ? "text-yellow-200" : ""
             }`}
           >
-            <NavLink to={"/about"}>About</NavLink>
-          </button>
+            About
+          </NavLink>
         </div>
-        {user === null && (
-          <div className={`flex text-gray-400 gap-1`}>
-            <button
+
+        {!user ? (
+          <div className="flex gap-3 text-gray-400">
+            <NavLink
+              to="/signup"
               className={`rounded-md px-3 py-2 bg-gray-600 hover:text-gray-800 hover:bg-gray-400 ${
-                location.pathname === "/signup" ? "text-yellow-200" : " "
+                location.pathname === "/signup" ? "text-yellow-200" : ""
               }`}
             >
-              <NavLink to={"/signup"}>Signup</NavLink>
-            </button>
-            <button
+              Signup
+            </NavLink>
+            <NavLink
+              to="/login"
               className={`rounded-md px-3 py-2 bg-gray-600 hover:text-gray-800 hover:bg-gray-400 ${
-                location.pathname === "/login" ? "text-yellow-200" : " "
+                location.pathname === "/login" ? "text-yellow-200" : ""
               }`}
             >
-              <NavLink to={"/login"}>Login</NavLink>
-            </button>
+              Login
+            </NavLink>
           </div>
-        )}
-        {user && (
-          <div className={`flex text-gray-400 gap-4`}>
-            <button
+        ) : (
+          <div className="flex gap-3 text-gray-400">
+            <NavLink
+              to="/dashboard/my-profile"
               className={`rounded-md px-3 py-2 bg-gray-600 hover:text-gray-800 hover:bg-gray-400 ${
-                location.pathname === "/profile" ? "text-yellow-200" : " "
+                location.pathname === "/dashboard/my-profile"
+                  ? "text-yellow-200"
+                  : ""
               }`}
             >
-              <NavLink to={"/dashboard/my-profile"}>Dashboard</NavLink>
-            </button>
+              Dashboard
+            </NavLink>
             <button
-              onClick={onClickLogoutHandler}
-              className={`rounded-md px-3 py-2 bg-gray-600 hover:text-gray-800 hover:bg-gray-400 ${
-                location.pathname === "/logout" ? "text-yellow-200" : " "
-              }`}
+              onClick={logoutHandler}
+              className="rounded-md px-3 py-2 bg-gray-600 hover:text-gray-800 hover:bg-gray-400"
             >
-              <NavLink to={"/logout"}>Logout</NavLink>
+              Logout
             </button>
           </div>
         )}

@@ -92,7 +92,7 @@ export function SinglePost() {
               {liked ? <FcLike size={25} /> : <FcLikePlaceholder size={22} />}
             </button>
             <NavLink to={`/likes/${post?._id}`}>
-              Total likes: {post.likes.length}
+              Total likes: {post?.likes?.length}
             </NavLink>
           </div>
 
@@ -102,7 +102,7 @@ export function SinglePost() {
               className="flex gap-2 relative text-green-200"
             >
               <FaRegCommentDots size={24} />
-              <div>Total comments: {post.comments.length}</div>
+              <div>Total comments: {post?.comments?.length}</div>
             </NavLink>
           </div>
         </div>

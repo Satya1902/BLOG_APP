@@ -16,7 +16,7 @@ get_db = database.get_db
 class CreatePostRequest(BaseModel):
     heading: str
     body: str
-    user_id: int
+    user: int
 
 class CommentRequest(BaseModel):
     post: int
@@ -62,7 +62,7 @@ def get_all_posts(db: Session = Depends(get_db)):
 
 @router.post("/createpost")
 def create_post(req: CreatePostRequest, db: Session = Depends(get_db)):
-    post = post_actions.create_post(db, req.heading, req.body, req.user_id)
+    post = post_actions.create_post(db, req.heading, req.body, req.user)
     return {"success": True, "savedPost": post}
 
 # Comments

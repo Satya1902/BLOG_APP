@@ -34,7 +34,9 @@ const CreateBlogPage = () => {
     }
 
     const userObj = safeParseJSON(localStorage.getItem("user"));
-    const user = userObj?._id;
+    const user = userObj?.id;
+
+    console.log("user in create blog is : ", userObj.id);
 
     if (!user) {
       toast.error("User not logged in");

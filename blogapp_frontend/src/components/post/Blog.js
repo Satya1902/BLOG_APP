@@ -111,7 +111,7 @@ export default function Blog({ post }) {
           <div className="w-full flex flex-row">
             <div className="text-white mx-auto flex gap-1 opacity-50">
               {shortPost}
-              {post.body.length > 25 ? " ...more" : "."}
+              {post?.body?.length > 25 ? " ...more" : "."}
             </div>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function Blog({ post }) {
               {liked ? <FcLike size={22} /> : <FcLikePlaceholder size={22} />}
             </button>
             <NavLink to={`/likes/${post?._id}`} className="text-md">
-              {post.likes.length}
+              {post?.likes?.length}
             </NavLink>
           </div>
           <NavLink
@@ -130,7 +130,7 @@ export default function Blog({ post }) {
             className="flex gap-2 relative text-green-200"
           >
             <FaRegCommentDots size={24} />
-            <div>{post.comments.length}</div>
+            <div>{post.comments?.length}</div>
           </NavLink>
         </div>
       </div>
