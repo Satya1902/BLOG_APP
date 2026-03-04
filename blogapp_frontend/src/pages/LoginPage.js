@@ -76,7 +76,7 @@ const LoginPage = () => {
 
       navigate("/dashboard/my-profile");
     } else {
-      toast.error(response.data.message);
+      toast.error(response?.data?.detail);
       navigate("/login");
     }
   }
