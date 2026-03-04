@@ -11,12 +11,14 @@ import { jwtDecode } from "jwt-decode";
 export default function Blog({ post }) {
   const [liked, setLiked] = useState(false);
   const [shortPost, setShortPost] = useState("");
+  const [likeCount, setLikeCount] = useState(post?.likes?.length || 0);
+  const [commentCount, setCommentCount] = useState(post?.comments?.length || 0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   // ✅ Get userId safely from JWT token
   const getTokenUserId = () => {
-    const token = localStorage.getItem("token"); // <-- your JWT
+    const token = localStorage.getItem("token");
     if (!token) return null;
     try {
       const decoded = jwtDecode(token);
@@ -35,7 +37,7 @@ export default function Blog({ post }) {
       const res = await axios.get(
         "http://127.0.0.1:4000/api/v1/isuserlikedthispost",
         {
-          params: { userid: userId, postid: post.id }, // ✅ backend uses "id"
+          params: { userid: userId, postid: post.id },
         },
       );
       setLiked(res.data.liked);
@@ -44,9 +46,28 @@ export default function Blog({ post }) {
     }
   }, [post]);
 
+  // ✅ Get updated like/comment count after like/dislike
+  const refreshCounts = useCallback(async () => {
+    if (!post?.id) return;
+    try {
+      const res = await axios.get(`http://127.0.0.1:4000/api/v1/getallposts`);
+      if (res.data?.success && Array.isArray(res.data.allPosts)) {
+        const updated = res.data.allPosts.find((p) => p.id === post.id);
+        if (updated) {
+          setLikeCount(updated.likes?.length || 0);
+          setCommentCount(updated.comments?.length || 0);
+        }
+      }
+    } catch (err) {
+      console.error("Error refreshing post data", err);
+    }
+  }, [post]);
+
   useEffect(() => {
     checkLikeStatus();
     setShortPost(post?.body?.slice(0, 50) || "");
+    setLikeCount(post?.likes?.length || 0);
+    setCommentCount(post?.comments?.length || 0);
   }, [post, checkLikeStatus]);
 
   // ✅ Handle like / dislike toggle
@@ -80,9 +101,12 @@ export default function Blog({ post }) {
         });
         if (res.data.success) {
           setLiked(false);
-          toast.error("You unliked this post");
+          toast("You unliked this post", { icon: "💔" });
         }
       }
+
+      // 🔄 Refresh like/comment count
+      await refreshCounts();
     } catch (err) {
       console.error("Error updating like", err);
       toast.error("Failed to update like");
@@ -108,21 +132,21 @@ export default function Blog({ post }) {
         </div>
 
         <div className="flex justify-around mt-4">
+          {/* ❤️ Like Section */}
           <div className="flex items-center gap-2 text-red-400">
             <button onClick={likeClickHandler}>
               {liked ? <FcLike size={22} /> : <FcLikePlaceholder size={22} />}
             </button>
-            <NavLink to={`/likes/${post.id}`}>
-              {post?.likes?.length ?? 0}
-            </NavLink>
+            <NavLink to={`/likes/${post.id}`}>{likeCount}</NavLink>
           </div>
 
+          {/* 💬 Comment Section */}
           <NavLink
             to={`/comments/${post.id}`}
             className="flex gap-2 text-green-200 items-center"
           >
             <FaRegCommentDots size={22} />
-            <div>{post?.comments?.length ?? 0}</div>
+            <div>{commentCount}</div>
           </NavLink>
         </div>
       </div>
