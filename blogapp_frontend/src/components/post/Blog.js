@@ -48,6 +48,7 @@ export default function Blog({ post }) {
   const likeClickHandler = async (e) => {
     e.stopPropagation();
     const user = getTokenUser();
+    console.log("user : ", user);
     if (!user) return;
 
     try {

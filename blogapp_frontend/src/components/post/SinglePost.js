@@ -26,7 +26,7 @@ export function SinglePost() {
     try {
       const response = await axios.get(
         `http://localhost:4000/api/v1/isuserlikedthispost`,
-        { params: { userid: userId, postid: post?._id } },
+        { params: { userid: userId, postid: post?.id } },
       );
       setLiked(response?.data?.liked || false);
     } catch (error) {
@@ -38,7 +38,7 @@ export function SinglePost() {
     try {
       const response = await axios.post(
         `http://localhost:4000/api/v1/createlike`,
-        { post, user: userObj },
+        { post: post.id, user: userId },
       );
       if (response?.data?.success) setLiked(true);
     } catch (error) {
@@ -51,7 +51,7 @@ export function SinglePost() {
     try {
       const response = await axios.post(
         `http://localhost:4000/api/v1/dislike`,
-        { post, user: userObj },
+        { post: post.id, user: userId },
       );
       if (response?.data?.success) setLiked(false);
     } catch (error) {
@@ -77,11 +77,16 @@ export function SinglePost() {
       <div className="w-[80%] h-[94%] mx-auto mt-4 flex flex-col gap-2 justify-between items-center bg-gray-700">
         <div className="w-full flex flex-col gap-4 items-center text-white">
           <div className="text-blue-400 text-3xl mt-4 font-bold">
-            {post.heading}
+            {post?.heading}
           </div>
-          <div className="text-white text-md">{post.body}</div>
+          <div className="text-white text-md">{post?.body}</div>
+
           <div className="w-[94%] mt-12 flex items-center justify-center text-sm opacity-70">
-            {`This post was created by ${post.user.firstname} ${post.user.lastname} on ${post.createdAt}`}
+            {`This post was created by ${
+              post?.author
+                ? `${post.author.firstname} ${post.author.lastname}`
+                : "Unknown Author"
+            } on ${new Date(post?.createdAt).toLocaleString()}`}
           </div>
         </div>
 
@@ -91,18 +96,18 @@ export function SinglePost() {
             <button onClick={likeClickHandler}>
               {liked ? <FcLike size={25} /> : <FcLikePlaceholder size={22} />}
             </button>
-            <NavLink to={`/likes/${post?._id}`}>
-              Total likes: {post?.likes?.length}
+            <NavLink to={`/likes/${post?.id}`}>
+              Total likes: {post?.likes?.length ?? 0}
             </NavLink>
           </div>
 
           <div className="flex gap-4 text-red-400 mr-12">
             <NavLink
-              to={`/comments/${post?._id}`}
+              to={`/comments/${post?.id}`}
               className="flex gap-2 relative text-green-200"
             >
               <FaRegCommentDots size={24} />
-              <div>Total comments: {post?.comments?.length}</div>
+              <div>Total comments: {post?.comments?.length ?? 0}</div>
             </NavLink>
           </div>
         </div>
@@ -114,7 +119,8 @@ export function SinglePost() {
           >
             Back
           </button>
-          {matchUser(post.user._id) && (
+
+          {matchUser(post?.author?.id) && (
             <>
               <button className="text-red-800 bg-gray-800 hover:text-red-600 border px-3 rounded-md">
                 Delete this post
@@ -124,6 +130,7 @@ export function SinglePost() {
               </button>
             </>
           )}
+
           <NavLink to="/dashboard/my-profile">
             <button className="mr-2 text-yellow-800 bg-gray-800 hover:text-yellow-600 border px-3 py-2 rounded-md">
               Back to Dashboard
